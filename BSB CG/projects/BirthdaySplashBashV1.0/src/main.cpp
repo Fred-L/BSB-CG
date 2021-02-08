@@ -1225,7 +1225,17 @@ int main() {
 			ShaderMaterial::sptr currentMat = nullptr;
 
 			// Bind colorCorrect
+			/*
+				For some reason when we add colorCorrect->Bind(); it make the screen blue and we don't know to fix it.
+				It might be something wrong with the colorcorrect, or when we have remove backandhand on line 1108 in order for the rest
+				of the code to work. 
+			*/
+			
+			// Issue colorCorrect
+
 			//colorCorrect->Bind();
+
+
 
 			// Grab out camera info from the camera object
 			Transform& camTransform = cameraObject.get<Transform>();
@@ -1532,20 +1542,16 @@ int main() {
 			if (coolBind)
 			{
 				coolCube.unbind(30);
-			
 			}
 
 			if (warmBind)
 			{
 				warmCube.unbind(30);
-				
-
 			}
 
 			if (magentaBind)
 			{
 				magentaCube.unbind(30);
-				
 			}
 
 			colorCorrect->UnbindTexture(0);
