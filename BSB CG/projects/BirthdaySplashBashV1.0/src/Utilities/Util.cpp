@@ -60,22 +60,23 @@ bool Util::CheckNumBetween(glm::vec4 num, glm::vec4 min, glm::vec4 max)
     return (x && y && z && w);
 }
 
-int Util::GetRandomNumberBetween(int from, int to, int avoidFrom, int avoidTo)
+int Util::GetRandomNumberBetween(int from, int to, std::vector<int> avoidFrom, std::vector<int> avoidTo)
 {
     //Just the typical random number generation within range
     int randomNum = (rand() % (to - from)) + from;
 
-    if (!CheckNumBetween(randomNum, avoidFrom, avoidTo))
+    for (int i = 0; i < avoidFrom.size(); i++)
     {
-        return randomNum;
+        if (CheckNumBetween(randomNum, avoidFrom[i], avoidTo[i]))
+        {
+            return GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
+        }
     }
-    else
-    {
-        GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
-    }
+
+    return randomNum;
 }
 
-float Util::GetRandomNumberBetween(float from, float to, float avoidFrom, float avoidTo)
+float Util::GetRandomNumberBetween(float from, float to, std::vector<float> avoidFrom, std::vector<float> avoidTo)
 {
     //DO NOT DIVIDE BY Z    if (to == 0.0f || from == 0.0f)
     {
@@ -89,34 +90,36 @@ float Util::GetRandomNumberBetween(float from, float to, float avoidFrom, float 
     //in order to convert it into a float range
     float randomNum = from + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (to - from)));
 
-    if (!CheckNumBetween(randomNum, avoidFrom, avoidTo))
+    for (int i = 0; i < avoidFrom.size(); i++)
     {
-        return randomNum;
+        if (CheckNumBetween(randomNum, avoidFrom[i], avoidTo[i]))
+        {
+            return GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
+        }
     }
-    else
-    {
-        GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
-    }
+
+    return randomNum;
 }
 
-glm::vec2 Util::GetRandomNumberBetween(glm::vec2 from, glm::vec2 to, glm::vec2 avoidFrom, glm::vec2 avoidTo)
+glm::vec2 Util::GetRandomNumberBetween(glm::vec2 from, glm::vec2 to, std::vector <glm::vec2> avoidFrom, std::vector <glm::vec2> avoidTo)
 {
     //Calls the float version on individual components
     glm::vec2 randomNum;
     randomNum.x = GetRandomNumberBetween(from.x, to.x);
     randomNum.y = GetRandomNumberBetween(from.y, to.y);
 
-    if (!CheckNumBetween(randomNum, avoidFrom, avoidTo))
+    for (int i = 0; i < avoidFrom.size(); i++)
     {
-        return randomNum;
+        if (CheckNumBetween(randomNum, avoidFrom[i], avoidTo[i]))
+        {
+            return GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
+        }
     }
-    else
-    {
-        GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
-    }
+
+    return randomNum;
 }
 
-glm::vec3 Util::GetRandomNumberBetween(glm::vec3 from, glm::vec3 to, glm::vec3 avoidFrom, glm::vec3 avoidTo)
+glm::vec3 Util::GetRandomNumberBetween(glm::vec3 from, glm::vec3 to, std::vector <glm::vec3> avoidFrom, std::vector <glm::vec3> avoidTo)
 {
     //Calls the float version on individual components
     glm::vec3 randomNum;
@@ -124,17 +127,18 @@ glm::vec3 Util::GetRandomNumberBetween(glm::vec3 from, glm::vec3 to, glm::vec3 a
     randomNum.y = GetRandomNumberBetween(from.y, to.y);
     randomNum.z = GetRandomNumberBetween(from.z, to.z);
     
-    if (!CheckNumBetween(randomNum, avoidFrom, avoidTo))
+    for (int i = 0; i < avoidFrom.size(); i++)
     {
-        return randomNum;
+        if (CheckNumBetween(randomNum, avoidFrom[i], avoidTo[i]))
+        {
+            return GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
+        }
     }
-    else
-    {
-        GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
-    }
+
+    return randomNum;
 }
 
-glm::vec3 Util::GetRandomNumberBetween(glm::vec4 from, glm::vec4 to, glm::vec4 avoidFrom, glm::vec4 avoidTo)
+glm::vec3 Util::GetRandomNumberBetween(glm::vec4 from, glm::vec4 to, std::vector <glm::vec4> avoidFrom, std::vector <glm::vec4> avoidTo)
 {
     //Calls the float version on individual components
     glm::vec4 randomNum;
@@ -143,12 +147,13 @@ glm::vec3 Util::GetRandomNumberBetween(glm::vec4 from, glm::vec4 to, glm::vec4 a
     randomNum.z = GetRandomNumberBetween(from.z, to.z);
     randomNum.w = GetRandomNumberBetween(from.w, to.w);
     
-    if (!CheckNumBetween(randomNum, avoidFrom, avoidTo))
+    for (int i = 0; i < avoidFrom.size(); i++)
     {
-        return randomNum;
+        if (CheckNumBetween(randomNum, avoidFrom[i], avoidTo[i]))
+        {
+            return GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
+        }
     }
-    else
-    {
-        GetRandomNumberBetween(from, to, avoidFrom, avoidTo);
-    }
+
+    return randomNum;
 }

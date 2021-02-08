@@ -58,6 +58,7 @@ We have been using Parsec, a screen sharing program, to play online "locally" wi
 #include "Graphics/TextureCubeMap.h"
 #include "Graphics/TextureCubeMapData.h"
 #include "Utilities/Util.h"
+#include "Utilities/BackendHandler.h"
 
 #define LOG_GL_NOTIFICATIONS
 #define NUM_TREES 25
@@ -281,6 +282,11 @@ int main() {
 		shader->LoadShaderPartFromFile("shaders/frag_blinn_phong_textured.glsl", GL_FRAGMENT_SHADER);
 		shader->Link();
 
+		Shader::sptr colorCorrectionShader = Shader::Create();
+		colorCorrectionShader->LoadShaderPartFromFile("shaders/passthrough_vert.glsl", GL_VERTEX_SHADER);
+		colorCorrectionShader->LoadShaderPartFromFile("shaders/color_correction_frag.glsl", GL_FRAGMENT_SHADER);
+		colorCorrectionShader->Link();
+
 		// Load a second material for our reflective material!
 		Shader::sptr reflectiveShader = Shader::Create();
 		reflectiveShader->LoadShaderPartFromFile("shaders/vertex_shader.glsl", GL_VERTEX_SHADER);
@@ -306,7 +312,14 @@ int main() {
 		int		  specularonly = 0;
 		int		  ambientandspecular = 0;
 		int		  ambientspeculartoon = 0;
-
+		bool	  cool = false;
+		bool	  warm = false;
+		bool	  magenta = false;
+		bool	  sepia = false;
+		bool	  coolBind = false;
+		bool	  warmBind = false;
+		bool	  magentaBind = false;
+		bool	  sepiaBind = false;
 		// These are our application / scene level uniforms that don't necessarily update
 		// every frame
 		shader->SetUniform("u_LightPos", lightPos);
@@ -403,6 +416,72 @@ int main() {
 					shader->SetUniform("u_ambientspecular", ambientandspecular = 0);
 					shader->SetUniform("u_ambientspeculartoon", ambientspeculartoon = 1);
 				}
+
+				if (cool) {
+					if (ImGui::Button("Toggle Colour Grading Cool:    On"))
+					{
+						cool = false;
+
+						coolBind = false;
+					}
+				}
+				else {
+					if (ImGui::Button("Toggle Colour Grading Cool:    Off"))
+					{
+						coolBind = true;
+
+						cool = true;
+
+						warm = false;
+						warmBind = false;
+						magenta = false;
+						magentaBind = false;
+					}
+				}
+
+				if (warm) {
+					if (ImGui::Button("Toggle Colour Grading Warm:    On"))
+					{
+						warm = false;
+
+						warmBind = false;
+					}
+				}
+				else {
+					if (ImGui::Button("Toggle Colour Grading Warm:    Off"))
+					{
+						warmBind = true;
+
+						warm = true;
+
+						cool = false;
+						coolBind = false;
+						magenta = false;
+						magentaBind = false;
+					}
+				}
+
+				if (magenta) {
+					if (ImGui::Button("Toggle Colour Grading Magenta: On"))
+					{
+						magenta = false;
+
+						magentaBind = false;
+					}
+				}
+				else {
+					if (ImGui::Button("Toggle Colour Grading Magenta: Off"))
+					{
+						magentaBind = true;
+
+						magenta = true;
+
+						cool = false;
+						coolBind = false;
+						warm = false;
+						warmBind = false;
+					}
+				}
 			}
 
 			auto name = controllables[selectedVao].get<GameObjectTag>().Name;
@@ -468,6 +547,11 @@ int main() {
 		Texture2D::sptr diffusepinwheel = Texture2D::LoadFromFile("images/Arena1/Pinwheel.png");
 		#pragma endregion Arena1 diffuses
 
+		LUT3D coolCube("cubes/cool.cube");
+		LUT3D warmCube("cubes/warm.cube");
+		LUT3D magentaCube("cubes/magenta.cube");
+		LUT3D sepiaCube("cubes/sepia.cube");
+
 		// Load the cube map
 		//TextureCubeMap::sptr environmentMap = TextureCubeMap::LoadFromImages("images/cubemaps/skybox/sample.jpg");
 		TextureCubeMap::sptr environmentMap = TextureCubeMap::LoadFromImages("images/cubemaps/skybox/ocean.jpg"); 
@@ -498,7 +582,7 @@ int main() {
 		GameScene::sptr Instructions = GameScene::Create("Instructions");
 		GameScene::sptr Pause = GameScene::Create("Pause");
 		GameScene::sptr WinandLose = GameScene::Create("Win/Lose");
-		Application::Instance().ActiveScene = Menu;
+		Application::Instance().ActiveScene = scene;
 
 		// We can create a group ahead of time to make iterating on the group faster
 		entt::basic_group<entt::entity, entt::exclude_t<>, entt::get_t<Transform>, RendererComponent> renderGroup =
@@ -819,21 +903,6 @@ int main() {
 			pathing->Points.push_back({ 2.5f,  -5.0f, 3.0f });
 			pathing->Speed = 2.0f;
 		}
-		
-		//Taken from week 3 tutorial because I wanted random trees from our game
-		std::vector<GameObject> randomTrees;
-		{
-			VertexArrayObject::sptr vao = ObjLoader::LoadFromFile("models/TestScene/TreeBig.obj");
-			for (int i = 0; i < NUM_TREES / 2; i++)
-			{
-				randomTrees.push_back(scene->CreateEntity("simplePine" + (std::to_string(i + 1))));
-				randomTrees[i].emplace<RendererComponent>().SetMesh(vao).SetMaterial(materialTreeBig);
-				//Randomly places
-				randomTrees[i].get<Transform>().SetLocalPosition(glm::vec3(Util::GetRandomNumberBetween(glm::vec2(-PLANE_X, -PLANE_Y), glm::vec2(PLANE_X, PLANE_Y), glm::vec2(-DNS_X, -DNS_Y), glm::vec2(DNS_X, DNS_Y)), 6.0f));
-				randomTrees[i].get<Transform>().SetLocalRotation(90.0f, 0.0f, 0.0f);
-				randomTrees[i].get<Transform>().SetLocalScale(0.5f, 0.5f, 0.5f);
-			}
-		}
 
 		GameObject objSwing = scene->CreateEntity("Swing");
 		{
@@ -1033,6 +1102,20 @@ int main() {
 			objBottleText2.get<Transform>().SetLocalRotation(0.0f, 180.0f, 180.0f);
 			objBottleText2.get<Transform>().SetLocalScale(3.0f, 3.0f, 3.0f);
 		}
+
+		int width, height;
+		//Issue
+		glfwGetWindowSize(window, &width, &height);
+
+		Framebuffer* colorCorrect;
+		GameObject colorCorrectObj = scene->CreateEntity("Color Correct");
+		{
+			colorCorrect = &colorCorrectObj.emplace<Framebuffer>();
+			colorCorrect->AddColorTarget(GL_RGBA8);
+			colorCorrect->AddDepthTarget();
+			colorCorrect->Init(width, height);
+		}
+
 		#pragma endregion Arena1 Objects
 
 		#pragma region Skybox
@@ -1128,6 +1211,8 @@ int main() {
 			}
 
 			// Clear the screen
+			colorCorrect->Clear();
+
 			glClearColor(0.08f, 0.17f, 0.31f, 1.0f);
 			glEnable(GL_DEPTH_TEST);
 			glClearDepth(1.0f);
@@ -1139,11 +1224,15 @@ int main() {
 			Shader::sptr current = nullptr;
 			ShaderMaterial::sptr currentMat = nullptr;
 
+			// Bind colorCorrect
+			//colorCorrect->Bind();
+
 			// Grab out camera info from the camera object
 			Transform& camTransform = cameraObject.get<Transform>();
 			glm::mat4 view = glm::inverse(camTransform.LocalTransform());
 			glm::mat4 projection = cameraObject.get<Camera>().GetProjection();
 			glm::mat4 viewProjection = projection * view;
+
 
 			#pragma region Menu
 			if (Application::Instance().ActiveScene == Menu) {
@@ -1412,6 +1501,57 @@ int main() {
 					});
 			}
 			#pragma endregion Pause
+			
+
+			colorCorrect->Unbind();
+
+			colorCorrectionShader->Bind();
+
+			colorCorrect->BindColorAsTexture(0, 0);
+
+			if (coolBind)
+			{
+				coolCube.bind(30);
+				std::cout << "Colour Grading Cool" << std::endl;
+			}
+			
+			if (warmBind)
+			{
+				warmCube.bind(30);
+				std::cout << "Colour Grading Warm" << std::endl;
+			}
+
+			if (magentaBind)
+			{
+				magentaCube.bind(30);
+				std::cout << "Colour Grading Magenta" << std::endl;
+			}
+
+			colorCorrect->DrawFullscreenQuad();
+
+			if (coolBind)
+			{
+				coolCube.unbind(30);
+			
+			}
+
+			if (warmBind)
+			{
+				warmCube.unbind(30);
+				
+
+			}
+
+			if (magentaBind)
+			{
+				magentaCube.unbind(30);
+				
+			}
+
+			colorCorrect->UnbindTexture(0);
+
+			colorCorrectionShader->UnBind();
+
 
 			#pragma endregion Rendering seperate scenes
 			
